@@ -1,21 +1,18 @@
 module HashCompactor
   def self.compact(hash)
-    hash.select do |_, value|
-      if value.is_a?(Hash)
-        next false if compact(value).empty?
-        # BUG: this returns "true" that the whole sub-hash should be added -- not the compacted one. This is due to how select works. Try using `map`
-        true
-      else
-        case
-        when value.is_a?(NilClass)
-          next false
-        when value.is_a?(String)
-          next false if value == ""
-        when value.is_a?(Enumerable)
-          next false if value.empty?
-        end
-        true
+    hash.each_with_object({}) do |(key, value), new_hash|
+      value = compact(value) if value.is_a?(Hash)
+
+      case
+      when value.is_a?(NilClass)
+        next
+      when value.is_a?(String)
+        next if value == ""
+      when value.is_a?(Enumerable)
+        next if value.empty?
       end
+
+      new_hash[key] = value
     end
   end
 end
